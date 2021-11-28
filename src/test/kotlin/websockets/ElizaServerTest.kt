@@ -2,7 +2,6 @@ package websockets
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.*
@@ -29,25 +28,24 @@ class ElizaServerTest {
     fun onOpen() {
         val latch = CountDownLatch(3)
         val list = mutableListOf<String>()
-
         val client = ElizaOnOpenMessageHandler(list, latch)
+
         container.connectToServer(client, URI("ws://localhost:$port/eliza"))
         latch.await()
         assertEquals(3, list.size)
         assertEquals("The doctor is in.", list[0])
     }
 
-    @Disabled
     @Test
     fun onChat() {
         val latch = CountDownLatch(4)
         val list = mutableListOf<String>()
-
         val client = ElizaOnOpenMessageHandlerToComplete(list, latch)
+
         container.connectToServer(client, URI("ws://localhost:$port/eliza"))
         latch.await()
-        // assertEquals(XXX, list.size) COMPLETE ME
-        // assertEquals(XXX, list[XXX]) COMPLETE ME
+        assert(list.size >= 4)
+        assertEquals("Please don't apologize.",list[3])
     }
 
 }
@@ -68,8 +66,8 @@ class ElizaOnOpenMessageHandlerToComplete(private val list: MutableList<String>,
     fun onMessage(message: String, session: Session)  {
         list.add(message)
         latch.countDown()
-        // if (COMPLETE ME) {
-        //    COMPLETE ME
-        // }
+        if (latch.count == 1L){
+            session.basicRemote.sendText("sorry")
+        }
     }
 }
